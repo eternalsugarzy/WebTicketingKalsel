@@ -287,15 +287,32 @@
     // Cek apakah kita berada di halaman validasi (ada div #qr-reader)
     if (document.getElementById('qr-reader')) {
       
-      // Fungsi ini dipanggil jika scan berhasil
+      var html5QrcodeScanner; // Definisikan di scope atas
+      var scanSedangDiproses = false; // Flag untuk mencegah scan ganda
+
+      // Fungsi ini dipanggil jika scan berhasil (dari KAMERA atau FILE)
       function onScanSuccess(decodedText, decodedResult) {
+        
+        // Cek apakah scan sebelumnya masih diproses
+        if (scanSedangDiproses) {
+          return; // Abaikan scan ini
+        }
+        scanSedangDiproses = true; // Kunci proses scan
+
         console.log(`Scan berhasil: ${decodedText}`);
 
         // 1. Tampilkan loading di area hasil
         $("#area_hasil_scan").html('<p class="text-muted text-center">Mengecek kode...</p>');
         
-        // 2. Hentikan scanner agar tidak scan berulang kali
-        html5QrcodeScanner.pause();
+        // 2. PAUSE scanner (lebih aman dari stop/clear)
+        // Kita gunakan try-catch untuk jaga-jaga jika ini scan dari file
+        try {
+           if (html5QrcodeScanner.getState() === Html5QrcodeScannerState.SCANNING) {
+             html5QrcodeScanner.pause();
+           }
+        } catch (e) {
+           console.warn("Gagal pause, mungkin ini file scan.", e);
+        }
 
         // 3. Kirim kode ke server (Controller Validasi) via AJAX
         $.ajax({
@@ -330,12 +347,27 @@
 
               // 5. Lanjutkan scan setelah 3 detik
               setTimeout(() => {
-                html5QrcodeScanner.resume();
-                $("#area_hasil_scan").html('<p class="text-muted text-center">Arahkan kamera ke QR Code...</p>');
+                try {
+                  if (html5QrcodeScanner.getState() === Html5QrcodeScannerState.PAUSED) {
+                    html5QrcodeScanner.resume();
+                  }
+                } catch (e) {
+                   console.warn("Gagal resume scanner.", e);
+                   // Jika gagal, mungkin file scan, reset saja teksnya
+                   $("#area_hasil_scan").html('<p class="text-muted text-center">Silakan scan lagi...</p>');
+                }
+                
+                // Reset teks di area hasil jika kamera masih PAUSED
+                if (html5QrcodeScanner.getState() === Html5QrcodeScannerState.PAUSED) {
+                    $("#area_hasil_scan").html('<p class="text-muted text-center">Arahkan kamera ke QR Code...</p>');
+                }
+                
+                scanSedangDiproses = false; // Buka kunci
               }, 3000); // 3 detik
             },
             error: function() {
               $("#area_hasil_scan").html('<p class="text-danger text-center">Error koneksi ke server.</p>');
+              scanSedangDiproses = false; // Buka kunci
             }
         });
       }
@@ -346,32 +378,19 @@
       }
 
       // 5. Buat objek scanner baru
-      var html5QrcodeScanner = new Html5QrcodeScanner(
+      html5QrcodeScanner = new Html5QrcodeScanner(
         "qr-reader", // ID div tempat kamera
         { 
           fps: 10, // Frames per second
-          qrbox: { width: 250, height: 250 } // Ukuran kotak scan
+          qrbox: { width: 250, height: 250 }, // Ukuran kotak scan
+          rememberLastUsedCamera: true // Ingat kamera terakhir
         },
         /* verbose= */ false);
+      
+      // 6. Langsung render scanner saat halaman dimuat
+      // Ini akan membuat UI lengkap (start/stop/upload)
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
-      // Event listener untuk tombol
-      $('#btn-scan').on('click', function() {
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-        $(this).hide();
-        $('#btn-stop').show();
-        $("#area_hasil_scan").html('<p class="text-muted text-center">Arahkan kamera ke QR Code...</p>');
-      });
-
-      $('#btn-stop').on('click', function() {
-        html5QrcodeScanner.stop().then((ignore) => {
-          // berhasil stop
-          $(this).hide();
-          $('#btn-scan').show();
-          $("#area_hasil_scan").html('<p class="text-muted text-center">Scanner dihentikan.</p>');
-        }).catch((err) => {
-          // gagal stop
-        });
-      });
     }
   </script>
 
