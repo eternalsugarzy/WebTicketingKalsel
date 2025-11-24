@@ -1,3 +1,24 @@
+<style>
+  /* Efek transisi pada link menu */
+  .pc-sidebar .pc-navbar .pc-item .pc-link {
+    transition: all 0.3s ease-in-out; /* Transisi halus selama 0.3 detik */
+    border-radius: 5px; /* Sedikit melengkung di sudut */
+  }
+
+  /* Efek saat di-hover */
+  .pc-sidebar .pc-navbar .pc-item:not(.active) .pc-link:hover {
+    background-color: rgba(0, 0, 0, 0.05); /* Latar belakang abu-abu transparan */
+    transform: translateX(5px); /* Geser sedikit ke kanan */
+    color: #0d6efd; /* Ubah warna teks jadi biru (opsional, sesuaikan tema) */
+  }
+
+  /* Efek pada ikon saat di-hover */
+  .pc-sidebar .pc-navbar .pc-item:not(.active) .pc-link:hover .pc-micon i {
+    transform: scale(1.2); /* Perbesar ikon sedikit */
+    transition: transform 0.3s ease;
+  }
+</style>
+
 <nav class="pc-sidebar">
   <div class="navbar-wrapper">
     
@@ -48,13 +69,14 @@
             </a>
           </li>
 
-          <li class="pc-item">
-  <a href="<?php echo base_url('pengunjung'); ?>" class="pc-link">
-    <span class="pc-micon"><i class="ti ti-chart-pie-2"></i></span>
-    <span class="pc-mtext">Data Pengunjung</span>
-  </a>
-</li>
+          <li class="pc-item <?php echo ($this->uri->segment(1) == 'pengunjung') ? 'active' : ''; ?>">
+            <a href="<?php echo base_url('pengunjung'); ?>" class="pc-link">
+              <span class="pc-micon"><i class="ti ti-chart-pie-2"></i></span>
+              <span class="pc-mtext">Data Pengunjung</span>
+            </a>
+          </li>
         <?php endif; ?>
+        
         <li class="pc-item pc-caption">
           <label>Transaksi</label>
         </li>
