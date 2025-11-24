@@ -50,7 +50,7 @@
 
           <li class="pc-item">
   <a href="<?php echo base_url('pengunjung'); ?>" class="pc-link">
-    <span class="pc-micon"><i data-feather="users"></i></span>
+    <span class="pc-micon"><i class="ti ti-chart-pie-2"></i></span>
     <span class="pc-mtext">Data Pengunjung</span>
   </a>
 </li>
