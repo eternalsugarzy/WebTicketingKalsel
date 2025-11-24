@@ -154,6 +154,12 @@
       if ($('#id_objek_filter').length) { 
         new TomSelect("#id_objek_filter", tomSelectSettings);
       }
+
+      if ($('#table-pengunjung').length) {
+    // Inisialisasi simple-datatables atau DataTables (tergantung library yg ada di template Anda)
+    // Contoh simpel:
+    new simpleDatatables.DataTable("#table-pengunjung");
+}
       
 
       // --- AJAX Kasir (Load Tiket) (Tetap) ---

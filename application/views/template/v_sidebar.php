@@ -47,6 +47,13 @@
               <span class="pc-mtext">Manajemen Harga</span>
             </a>
           </li>
+
+          <li class="pc-item">
+  <a href="<?php echo base_url('pengunjung'); ?>" class="pc-link">
+    <span class="pc-micon"><i data-feather="users"></i></span>
+    <span class="pc-mtext">Data Pengunjung</span>
+  </a>
+</li>
         <?php endif; ?>
         <li class="pc-item pc-caption">
           <label>Transaksi</label>
