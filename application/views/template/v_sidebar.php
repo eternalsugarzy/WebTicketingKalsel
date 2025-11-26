@@ -24,7 +24,7 @@
     
     <div class="m-header" style="display: flex; justify-content: center; align-items: center;"> 
       <a href="<?php echo base_url('dashboard'); ?>" class="b-brand text-primary">
-        <img src="<?php echo base_url('assets/img/logo.png'); ?>" class="img-fluid logo-lg" alt="logo" style="height: 55px;"> 
+        <img src="<?php echo base_url('assets/img/wonderfulkalsel.png'); ?>" class="img-fluid logo-lg" alt="logo" style="height: 55px;"> 
       </a>
     </div>
     <div class="navbar-content">
