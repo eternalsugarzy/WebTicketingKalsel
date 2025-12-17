@@ -83,8 +83,8 @@ class Harga_tiket extends CI_Controller {
         }
     }
 
-    /**
-     * [FUNGSI BARU] Halaman form edit
+   /**
+     * [FUNGSI UPDATE] Halaman form edit
      */
     public function edit($id_harga)
     {
@@ -94,7 +94,9 @@ class Harga_tiket extends CI_Controller {
         $data['harga'] = $this->M_harga_tiket->get_harga_by_id($id_harga);
         // Ambil data untuk dropdown
         $data['objek_wisata'] = $this->M_harga_tiket->get_objek_wisata_list();
-        $data['jenis_ tiket'] = $this->M_harga_tiket->get_jenis_tiket_list();
+        
+        // [PERBAIKAN] Hapus spasi yang salah di sini ('jenis_ tiket' -> 'jenis_tiket')
+        $data['jenis_tiket'] = $this->M_harga_tiket->get_jenis_tiket_list();
 
         if ( ! $data['harga']) {
             redirect('harga_tiket');
@@ -102,7 +104,8 @@ class Harga_tiket extends CI_Controller {
 
         $this->load->view('template/v_header', $data);
         $this->load->view('template/v_sidebar', $data);
-        $this->load->view('harga_tiket/v_harga_edit', $data);
+        // Pastikan nama file view Anda benar, di sini saya gunakan nama dari chat Anda sebelumnya
+        $this->load->view('harga_tiket/v_harga_edit', $data); 
         $this->load->view('template/v_footer', $data);
     }
 
