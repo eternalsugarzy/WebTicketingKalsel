@@ -10,7 +10,7 @@
   <meta name="description" content="Sistem Informasi E-Ticketing Objek Wisata Kalimantan Selatan">
   <meta name="author" content="Muhammad Irwan Firmanto">
 
-  <link rel="icon" href="<?php echo base_url('assets/img/logo.png'); ?>" type="image/png">
+  <link rel="icon" href="<?php echo base_url('assets/img/wonderfulkalsel.png'); ?>" type="image/png">
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" id="main-font-link">
 

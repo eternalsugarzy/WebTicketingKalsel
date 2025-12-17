@@ -16,6 +16,7 @@
         </div>
       </div>
     </div>
+    
     <div class="row">
       <div class="col-md-8">
         <div class="card shadow-sm">
@@ -30,11 +31,11 @@
 
               <div class="mb-3">
                 <label for="id_objek" class="form-label">Objek Wisata</label>
-                <select class="form-select" id="id_objek" name="id_objek">
+                <select class="form-select" id="id_objek" name="id_objek" required>
                   <option value="">-- Pilih Objek Wisata --</option>
                   <?php foreach ($objek_wisata as $objek) : ?>
                     <option value="<?php echo $objek['id_objek']; ?>" 
-                            <?php echo set_select('id_objek', $objek['id_objek'], ($harga['id_objek'] == $objek['id_objek'])); ?>>
+                        <?php echo ($harga['id_objek'] == $objek['id_objek']) ? 'selected' : ''; ?>>
                       <?php echo $objek['nama_objek']; ?> (<?php echo $objek['nama_kabupaten']; ?>)
                     </option>
                   <?php endforeach; ?>
@@ -44,22 +45,26 @@
 
               <div class="mb-3">
                 <label for="id_jenis_tiket" class="form-label">Kategori Tiket</label>
-                <select class="form-select" id="id_jenis_tiket" name="id_jenis_tiket">
-                  <option value="">-- Pilih Kategori Tiket --</option>
-                  <?php foreach ($jenis_tiket as $tiket) : ?>
-                    <option value="<?php echo $tiket['id_jenis_tiket']; ?>" 
-                            <?php echo set_select('id_jenis_tiket', $tiket['id_jenis_tiket'], ($harga['id_jenis_tiket'] == $tiket['id_jenis_tiket'])); ?>>
-                      <?php echo $tiket['nama_tiket']; ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
+                <?php if(isset($jenis_tiket) && !empty($jenis_tiket)) : ?>
+                    <select class="form-select" id="id_jenis_tiket" name="id_jenis_tiket" required>
+                    <option value="">-- Pilih Kategori Tiket --</option>
+                    <?php foreach ($jenis_tiket as $tiket) : ?>
+                        <option value="<?php echo $tiket['id_jenis_tiket']; ?>" 
+                            <?php echo ($harga['id_jenis_tiket'] == $tiket['id_jenis_tiket']) ? 'selected' : ''; ?>>
+                        <?php echo $tiket['nama_tiket']; ?>
+                        </option>
+                    <?php endforeach; ?>
+                    </select>
+                <?php else : ?>
+                    <div class="alert alert-danger">Data Kategori Tiket tidak ditemukan/kosong.</div>
+                <?php endif; ?>
                 <?php echo form_error('id_jenis_tiket', '<small class="text-danger">', '</small>'); ?>
               </div>
               
               <div class="mb-3">
                 <label for="harga" class="form-label">Harga (Rp)</label>
                 <input type="number" class="form-control" id="harga" name="harga" 
-                       value="<?php echo set_value('harga', $harga['harga']); ?>" placeholder="Contoh: 10000">
+                       value="<?php echo set_value('harga', $harga['harga']); ?>" placeholder="Contoh: 10000" required>
                 <?php echo form_error('harga', '<small class="text-danger">', '</small>'); ?>
               </div>
 
@@ -71,5 +76,5 @@
         </div>
       </div>
     </div>
-    </div>
+  </div>
 </div>
