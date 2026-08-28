@@ -6,11 +6,8 @@ class User extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
-        
-        if ( ! $this->session->userdata('username')) {
-            $this->session->set_flashdata('error', 'Anda harus login terlebih dahulu!');
-            redirect('auth');
-        }
+        check_login();
+        check_role('Admin');
         $this->load->model('M_user');
     }
 
@@ -144,10 +141,23 @@ class User extends CI_Controller {
     /**
      * Proses hapus data
      */
-    public function hapus($id_user)
+     public function hapus($id_user)
     {
-        $this->M_user->hapus_user($id_user);
-        $this->session->set_flashdata('sukses', 'Data user berhasil dihapus.');
+        $user = $this->M_user->get_user_by_id($id_user);
+
+        if (!$user) {
+            $this->session->set_flashdata('error', 'Data user tidak ditemukan!');
+            redirect('user');
+        }
+
+        $result = $this->M_user->hapus_user($id_user);
+
+        if ($result) {
+            $this->session->set_flashdata('sukses', 'Data user berhasil dihapus.');
+        } else {
+            $this->session->set_flashdata('error', 'Gagal menghapus data user. User mungkin masih digunakan dalam transaksi.');
+        }
+
         redirect('user');
     }
 }

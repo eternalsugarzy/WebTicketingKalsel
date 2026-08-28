@@ -4,47 +4,69 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class M_validasi extends CI_Model {
 
     /**
-     * Mengecek dan memvalidasi kode tiket
+     * Validasi dan memproses scan kode tiket (atomic)
      */
     public function validasi_tiket($kode_tiket, $id_petugas)
     {
-        // 1. Cari tiket berdasarkan kodenya
+        // Atomic update: hanya update jika status masih BELUM_DIPAKAI
         $this->db->where('kode_tiket', $kode_tiket);
-        $query = $this->db->get('tbl_tiket');
-        $tiket = $query->row_array();
+        $this->db->where('status_tiket', 'BELUM_DIPAKAI');
+        $this->db->set('status_tiket', 'SUDAH_DIPAKAI');
+        $this->db->set('waktu_validasi', date('Y-m-d H:i:s'));
+        $this->db->set('id_user_petugas', $id_petugas);
+        $this->db->update('tbl_tiket');
 
-        // 2. Jika tiket tidak ditemukan
-        if ( ! $tiket) {
+        $affected_rows = $this->db->affected_rows();
+
+        if ($affected_rows > 0) {
+            // Sukses: tiket berhasil divalidasi
             return [
-                'status' => 'error',
-                'message' => 'Tiket Tidak Ditemukan! (Kode: ' . html_escape($kode_tiket) . ')'
+                'status' => 'sukses',
+                'message' => 'BERHASIL. Selamat Datang!',
+                'data' => $this->get_detail_tiket_by_kode($kode_tiket)
             ];
         }
 
-        // 3. Jika tiket ditemukan, cek statusnya
-        if ($tiket['status_tiket'] == 'SUDAH_DIPAKAI') {
+        // Cek apakah tiket ada
+        $this->db->where('kode_tiket', $kode_tiket);
+        $tiket = $this->db->get('tbl_tiket')->row_array();
+
+        if ($tiket) {
+            // Tiket sudah dipakai
             return [
                 'status' => 'warning',
                 'message' => 'TIKET SUDAH DIGUNAKAN! (Pada: ' . $tiket['waktu_validasi'] . ')',
-                'data' => $this->get_detail_tiket($tiket['id_transaksi']) 
+                'data' => $this->get_detail_tiket($tiket['id_transaksi'])
             ];
         }
 
-        // 4. Jika tiket BELUM_DIPAKAI (Valid)
-        $data_update = [
-            'status_tiket' => 'SUDAH_DIPAKAI',
-            'waktu_validasi' => date('Y-m-d H:i:s'),
-            'id_user_petugas' => $id_petugas
-        ];
-        $this->db->where('id_tiket', $tiket['id_tiket']);
-        $this->db->update('tbl_tiket', $data_update);
-
-        // Kirim balasan sukses
+        // Tiket tidak ditemukan
         return [
-            'status' => 'sukses',
-            'message' => 'BERHASIL. Selamat Datang!',
-            'data' => $this->get_detail_tiket($tiket['id_transaksi']) 
+            'status' => 'error',
+            'message' => 'Tiket Tidak Ditemukan! (Kode: ' . html_escape($kode_tiket) . ')'
         ];
+    }
+
+    /**
+     * Helper untuk mengambil detail transaksi berdasarkan kode tiket
+     */
+    public function get_detail_tiket_by_kode($kode_tiket)
+    {
+        $query = $this->db->query("
+            SELECT 
+                o.nama_objek,
+                k.nama_kabupaten,
+                SUM(td.jumlah) as total_pengunjung
+            FROM tbl_tiket t
+            JOIN tbl_transaksi tr ON t.id_transaksi = tr.id_transaksi
+            JOIN tbl_objek_wisata o ON tr.id_objek = o.id_objek
+            JOIN tbl_kabupaten k ON o.id_kabupaten = k.id_kabupaten
+            JOIN tbl_transaksi_detail td ON tr.id_transaksi = td.id_transaksi
+            WHERE t.kode_tiket = ?
+            GROUP BY o.nama_objek, k.nama_kabupaten
+        ", [$kode_tiket]);
+
+        return $query->row_array();
     }
 
     /**

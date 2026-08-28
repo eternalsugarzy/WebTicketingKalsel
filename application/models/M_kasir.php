@@ -9,21 +9,30 @@ class M_kasir extends CI_Model {
      */
     public function simpan_transaksi($data_transaksi, $data_detail, $data_tiket)
     {
-        // Muat model harga tiket untuk mengambil info id_jenis_tiket
         $this->load->model('M_harga_tiket');
 
-        $this->db->trans_start(); // Mulai transaksi
+        $this->db->trans_start();
 
-        // 1. Simpan ke tbl_transaksi
+        // Insert transaksi
         $this->db->insert('tbl_transaksi', $data_transaksi);
-        // Ambil ID dari transaksi yang baru saja disimpan
         $id_transaksi = $this->db->insert_id();
 
-        // 2. Siapkan data detail untuk batch insert
+        if (!$id_transaksi) {
+            log_message('error', 'Gagal insert transaksi: ' . print_r($this->db->error(), true));
+            $this->db->trans_rollback();
+            return false;
+        }
+
+        // Insert detail transaksi
         $detail_batch = [];
         foreach ($data_detail as $id_harga => $item) {
-            // Ambil id_jenis_tiket dari tbl_harga_tiket
             $harga_info = $this->M_harga_tiket->get_harga_by_id($id_harga);
+
+            if (!$harga_info) {
+                log_message('error', 'Harga tidak ditemukan untuk id_harga: ' . $id_harga);
+                $this->db->trans_rollback();
+                return false;
+            }
 
             $detail_batch[] = [
                 'id_transaksi' => $id_transaksi,
@@ -32,20 +41,22 @@ class M_kasir extends CI_Model {
                 'harga_saat_transaksi' => $item['harga_saat_transaksi']
             ];
         }
-        // Simpan semua data detail sekaligus
-        $this->db->insert_batch('tbl_transaksi_detail', $detail_batch);
+        
+        if (!empty($detail_batch)) {
+            $this->db->insert_batch('tbl_transaksi_detail', $detail_batch);
+        }
 
-        // 3. Update id_transaksi di data tiket & simpan
+        // Insert tiket
         $data_tiket['id_transaksi'] = $id_transaksi;
         $this->db->insert('tbl_tiket', $data_tiket);
 
-        $this->db->trans_complete(); // Selesaikan transaksi
+        $this->db->trans_complete();
 
-        // Cek apakah transaksi berhasil
         if ($this->db->trans_status() === FALSE) {
+            log_message('error', 'Transaksi gagal: ' . print_r($this->db->error(), true));
             return false;
         } else {
-            // Jika berhasil, kembalikan ID Transaksi
+            log_message('debug', 'Transaksi berhasil dengan ID: ' . $id_transaksi);
             return $id_transaksi;
         }
     }
@@ -78,5 +89,13 @@ class M_kasir extends CI_Model {
         $data['tiket'] = $this->db->get()->row_array();
 
         return $data;
+    }
+
+    public function get_transaksi_by_id($id_transaksi)
+    {
+        $this->db->select('id_user_kasir, id_objek');
+        $this->db->from('tbl_transaksi');
+        $this->db->where('id_transaksi', $id_transaksi);
+        return $this->db->get()->row_array();
     }
 }

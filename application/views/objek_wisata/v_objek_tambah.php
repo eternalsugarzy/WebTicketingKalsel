@@ -24,7 +24,7 @@
           </div>
           <div class="card-body">
             
-            <?php echo form_open('objek_wisata/proses_tambah'); ?>
+            <?php echo form_open_multipart('objek_wisata/proses_tambah'); ?>
               
               <div class="mb-3">
                 <label for="nama_objek" class="form-label">Nama Objek Wisata</label>
@@ -49,6 +49,17 @@
               <div class="mb-3">
                 <label for="alamat" class="form-label">Alamat</label>
                 <textarea class="form-control" id="alamat" name="alamat" rows="3"><?php echo set_value('alamat'); ?></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="deskripsi" class="form-label">Deskripsi Lengkap</label>
+                <textarea class="form-control" id="deskripsi" name="deskripsi" rows="5"><?php echo set_value('deskripsi'); ?></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="foto" class="form-label">Foto Objek Wisata</label>
+                <input type="file" class="form-control" id="foto" name="foto">
+                <small class="text-muted">Format: jpg, png, jpeg. Maksimal 2MB.</small>
               </div>
 
               <button type="submit" class="btn btn-primary">Simpan</button>

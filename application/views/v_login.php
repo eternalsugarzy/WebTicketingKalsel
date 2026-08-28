@@ -77,6 +77,7 @@
             <?php endif; ?>
 
             <?php echo form_open('auth/proses_login'); ?>
+              <?php echo '<input type="hidden" name="' . $this->security->get_csrf_token_name() . '" value="' . $this->security->get_csrf_hash() . '">'; ?>
               
               <div class="form-group mb-3">
                 <label class="form-label">Username</label>

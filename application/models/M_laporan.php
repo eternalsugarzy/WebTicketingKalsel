@@ -35,22 +35,26 @@ class M_laporan extends CI_Model {
      */
     public function get_total_penjualan($tgl_mulai, $tgl_selesai)
     {
-        $tgl_selesai = $tgl_selesai . ' 23:59:59';
-
-        $this->db->select('
-            SUM(tbl_transaksi.total_harga) as total_pendapatan,
-            COUNT(tbl_transaksi.id_transaksi) as total_transaksi,
-            SUM(tbl_transaksi_detail.jumlah) as total_tiket_terjual
-        ');
+        // Hitung total pendapatan dari tabel transaksi saja
+        $this->db->select('SUM(total_harga) as total_pendapatan, COUNT(*) as total_transaksi');
         $this->db->from('tbl_transaksi');
-        $this->db->join('tbl_transaksi_detail', 'tbl_transaksi.id_transaksi = tbl_transaksi_detail.id_transaksi');
-        
-        // Filter tanggal
-        $this->db->where('tbl_transaksi.waktu_transaksi >=', $tgl_mulai);
-        $this->db->where('tbl_transaksi.waktu_transaksi <=', $tgl_selesai);
-        
-        $query = $this->db->get();
-        return $query->row_array(); // Kembalikan 1 baris hasil
+        $this->db->where('waktu_transaksi >=', $tgl_mulai);
+        $this->db->where('waktu_transaksi <=', $tgl_selesai . ' 23:59:59');
+        $transaksi_result = $this->db->get()->row_array();
+
+        // Hitung total tiket terjual dari detail, dengan join yang tepat
+        $this->db->select('SUM(td.jumlah) as total_tiket_terjual');
+        $this->db->from('tbl_transaksi_detail td');
+        $this->db->join('tbl_transaksi t', 'td.id_transaksi = t.id_transaksi');
+        $this->db->where('t.waktu_transaksi >=', $tgl_mulai);
+        $this->db->where('t.waktu_transaksi <=', $tgl_selesai . ' 23:59:59');
+        $tiket_result = $this->db->get()->row_array();
+
+        return [
+            'total_pendapatan' => $transaksi_result['total_pendapatan'] ?? 0,
+            'total_transaksi' => $transaksi_result['total_transaksi'] ?? 0,
+            'total_tiket_terjual' => $tiket_result['total_tiket_terjual'] ?? 0
+        ];
     }
 
     /**
@@ -132,33 +136,48 @@ class M_laporan extends CI_Model {
         $tgl_selesai = $tgl_selesai . ' 23:59:59';
 
         $this->db->select('
+            ow.id_objek,
             ow.nama_objek,
             k.nama_kabupaten,
-            COUNT(DISTINCT t.id_transaksi) as total_transaksi,
-            SUM(td.jumlah) as total_pengunjung,
-            SUM(t.total_harga) as total_pendapatan
+            COALESCE(trx.total_transaksi, 0) as total_transaksi,
+            COALESCE(td_det.total_pengunjung, 0) as total_pengunjung,
+            COALESCE(trx.total_pendapatan, 0) as total_pendapatan
         ');
         $this->db->from('tbl_objek_wisata ow');
         $this->db->join('tbl_kabupaten k', 'ow.id_kabupaten = k.id_kabupaten');
-        
-        // Kita gunakan LEFT JOIN agar objek wisata yang 0 penjualannya tetap tampil
-        $this->db->join('tbl_transaksi t', 'ow.id_objek = t.id_objek', 'left');
-        $this->db->join('tbl_transaksi_detail td', 't.id_transaksi = td.id_transaksi', 'left');
 
-        // Filter berdasarkan rentang tanggal scan
-        // Kita harus pastikan filternya berlaku untuk data transaksi
-        $this->db->where('t.waktu_transaksi >=', $tgl_mulai);
-        $this->db->where('t.waktu_transaksi <=', $tgl_selesai);
-        
-        // [BARU] Filter berdasarkan kabupaten jika dipilih
+        // Subquery untuk total transaksi dan pendapatan (hindari duplikasi dari join detail)
+        $this->db->join("(
+            SELECT 
+                id_objek,
+                COUNT(*) as total_transaksi,
+                SUM(total_harga) as total_pendapatan
+            FROM tbl_transaksi
+            WHERE waktu_transaksi >= '$tgl_mulai'
+            AND waktu_transaksi <= '$tgl_selesai'
+            GROUP BY id_objek
+        ) trx", 'ow.id_objek = trx.id_objek', 'left');
+
+        // Subquery untuk total pengunjung
+        $this->db->join("(
+            SELECT 
+                tr.id_objek,
+                SUM(td.jumlah) as total_pengunjung
+            FROM tbl_transaksi_detail td
+            JOIN tbl_transaksi tr ON td.id_transaksi = tr.id_transaksi
+            WHERE tr.waktu_transaksi >= '$tgl_mulai'
+            AND tr.waktu_transaksi <= '$tgl_selesai'
+            GROUP BY tr.id_objek
+        ) td_det", 'ow.id_objek = td_det.id_objek', 'left');
+
+        // Filter kabupaten jika dipilih
         if ($id_kabupaten) {
             $this->db->where('ow.id_kabupaten', $id_kabupaten);
         }
 
-        // Kunci dari laporan ini: Group By Objek Wisata
         $this->db->group_by('ow.id_objek, ow.nama_objek, k.nama_kabupaten');
         $this->db->order_by('total_pendapatan', 'DESC');
-        
+
         $query = $this->db->get();
         return $query->result_array();
     }

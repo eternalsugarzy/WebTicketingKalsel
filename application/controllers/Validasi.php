@@ -6,17 +6,8 @@ class Validasi extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
-        
-        // [PERBAIKAN] Muat library session SEBELUM Anda menggunakannya
-        $this->load->library('session'); 
-
-        // Cek status login (Baris ini sekarang akan berfungsi)
-        if ( ! $this->session->userdata('username')) {
-            $this->session->set_flashdata('error', 'Anda harus login terlebih dahulu!');
-            redirect('auth');
-        }
-
-        // Muat model
+        check_login();
+        check_role(['Admin', 'Kasir', 'Petugas']);
         $this->load->model('M_validasi');
     }
 

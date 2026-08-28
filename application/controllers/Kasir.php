@@ -6,16 +6,11 @@ class Kasir extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
-        
-        // Cek status login
-        if ( ! $this->session->userdata('username')) {
-            $this->session->set_flashdata('error', 'Anda harus login terlebih dahulu!');
-            redirect('auth');
-        }
+        check_login();
+        check_role(['Admin', 'Kasir']);
 
         $this->load->model('M_harga_tiket');
-        // [BARU] Memuat model kasir
-        $this->load->model('M_kasir'); 
+        $this->load->model('M_kasir');
     }
 
     /**
@@ -49,66 +44,90 @@ class Kasir extends CI_Controller {
      */
     public function proses_transaksi()
     {
-        // Set header output ke JSON
-        header('Content-Type: application/json');
+        try {
+            header('Content-Type: application/json');
+            
+            // Log untuk debugging
+            log_message('debug', 'POST data: ' . print_r($_POST, true));
 
-        // 1. Ambil data dari POST
-        $id_objek = $this->input->post('id_objek');
-        $items = $this->input->post('tiket');
-        $total_harga = 0;
+            $id_objek = $this->input->post('id_objek');
+            $items = $this->input->post('tiket');
+            $total_harga = 0;
 
-        // Validasi minimal 1 item
-        if (empty($items) || empty($id_objek)) {
-            echo json_encode(['status' => 'gagal', 'message' => 'Keranjang kosong atau Objek Wisata belum dipilih.']);
-            return;
-        }
+            if (empty($items) || empty($id_objek)) {
+                echo json_encode(['status' => 'gagal', 'message' => 'Keranjang kosong atau Objek Wisata belum dipilih.']);
+                return;
+            }
 
-        // 2. Siapkan data untuk batch insert
-        $data_detail = [];
-        foreach ($items as $id_harga => $item) {
-            $jumlah = (int)$item['jumlah'];
-            $harga = (int)$item['harga'];
-            $subtotal = $jumlah * $harga;
-            $total_harga += $subtotal;
+            $this->load->model('M_harga_tiket');
 
-            // Kumpulkan data untuk disimpan (key adalah id_harga)
-            $data_detail[$id_harga] = [ 
-                'jumlah' => $jumlah,
-                'harga_saat_transaksi' => $harga
+            $data_detail = [];
+            foreach ($items as $id_harga => $item) {
+                $jumlah = (int)$item['jumlah'];
+                $id_harga = (int)$id_harga;
+
+                if ($jumlah <= 0) {
+                    continue;
+                }
+
+                $harga_info = $this->M_harga_tiket->get_harga_with_objek($id_harga, $id_objek);
+
+                if (!$harga_info) {
+                    echo json_encode(['status' => 'gagal', 'message' => 'Harga tiket tidak valid untuk objek wisata yang dipilih.']);
+                    return;
+                }
+
+                $harga = (int)$harga_info['harga'];
+                $subtotal = $jumlah * $harga;
+                $total_harga += $subtotal;
+
+                $data_detail[$id_harga] = [
+                    'jumlah' => $jumlah,
+                    'harga_saat_transaksi' => $harga
+                ];
+            }
+
+            if (empty($data_detail)) {
+                echo json_encode(['status' => 'gagal', 'message' => 'Tidak ada item tiket yang valid untuk diproses.']);
+                return;
+            }
+
+            $data_transaksi = [
+                'id_user_kasir' => $this->session->userdata('id_user'),
+                'id_objek' => $id_objek,
+                'waktu_transaksi' => date('Y-m-d H:i:s'),
+                'total_harga' => $total_harga,
+                'status_transaksi' => 'Lunas'
             ];
-        }
 
-        // 3. Siapkan data untuk tabel utama
-        $data_transaksi = [
-            'id_user_kasir' => $this->session->userdata('id_user'),
-            'id_objek' => $id_objek,
-            'waktu_transaksi' => date('Y-m-d H:i:s'),
-            'total_harga' => $total_harga,
-            'status_transaksi' => 'Lunas'
-        ];
+            $kode_tiket = 'TKT-' . date('Ymd') . '-' . bin2hex(random_bytes(6));
+            $data_tiket = [
+                'id_transaksi' => 0,
+                'kode_tiket' => $kode_tiket,
+                'status_tiket' => 'BELUM_DIPAKAI'
+            ];
 
-        // 4. Siapkan data untuk tabel tiket (QR Code)
-        // Format: TKT-[TanggalYmd]-[UnixTimestamp]
-        $kode_tiket = 'TKT-' . date('Ymd') . '-' . time();
-        $data_tiket = [
-            'id_transaksi' => 0, // Akan diisi oleh model
-            'kode_tiket' => $kode_tiket,
-            'status_tiket' => 'BELUM_DIPAKAI'
-        ];
+            $id_transaksi = $this->M_kasir->simpan_transaksi($data_transaksi, $data_detail, $data_tiket);
 
-        // 5. Simpan ke database via model
-        $id_transaksi = $this->M_kasir->simpan_transaksi($data_transaksi, $data_detail, $data_tiket);
-
-        // 6. Kirim respon kembali ke JavaScript
-        if ($id_transaksi) {
-            echo json_encode([
-                'status' => 'sukses',
-                'id_transaksi' => $id_transaksi
-            ]);
-        } else {
+            if ($id_transaksi) {
+                echo json_encode([
+                    'status' => 'sukses',
+                    'id_transaksi' => $id_transaksi
+                ]);
+            } else {
+                // Cek database error
+                $db_error = $this->db->error();
+                log_message('error', 'Database error: ' . print_r($db_error, true));
+                echo json_encode([
+                    'status' => 'gagal',
+                    'message' => 'Terjadi kesalahan saat menyimpan data. Periksa koneksi database.'
+                ]);
+            }
+        } catch (Exception $e) {
+            log_message('error', 'Exception in proses_transaksi: ' . $e->getMessage());
             echo json_encode([
                 'status' => 'gagal',
-                'message' => 'Terjadi kesalahan saat menyimpan data.'
+                'message' => 'Error: ' . $e->getMessage()
             ]);
         }
     }
@@ -120,16 +139,19 @@ class Kasir extends CI_Controller {
     public function cetak_struk($id_transaksi)
     {
         $data['judul_halaman'] = 'Cetak Struk';
-        
-        // Ambil semua data untuk struk
+
         $data['struk'] = $this->M_kasir->get_struk_by_id($id_transaksi);
 
-        // Jika data transaksi tidak ditemukan, tampilkan 404
         if (empty($data['struk']['transaksi'])) {
             show_404();
         }
-        
-        // Memuat view struk
+
+        // Batasi akses: Admin bisa lihat semua, Kasir hanya miliknya
+        if (!is_admin() && $data['struk']['transaksi']['id_user_kasir'] != get_current_user_id()) {
+            $this->session->set_flashdata('error', 'Anda tidak dapat mengakses transaksi ini!');
+            redirect('kasir');
+        }
+
         $this->load->view('kasir/v_struk', $data);
     }
 }

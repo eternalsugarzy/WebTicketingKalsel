@@ -110,8 +110,8 @@
                     <td><?php echo $no++; ?></td>
                     <td><?php echo date('d/m/Y H:i', strtotime($laporan['waktu_transaksi'])); ?></td>
                     <td><?php echo $laporan['id_transaksi']; ?></td>
-                    <td><?php echo $laporan['nama_objek']; ?></td>
-                    <td><?php echo $laporan['nama_kasir']; ?></td>
+                    <td><?php echo html_escape($laporan['nama_objek']); ?></td>
+                    <td><?php echo html_escape($laporan['nama_kasir']); ?></td>
                     <td>Rp <?php echo number_format($laporan['total_harga'], 0, ',', '.'); ?></td>
                   </tr>
                   <?php endforeach; ?>

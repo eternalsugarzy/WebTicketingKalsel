@@ -116,8 +116,8 @@
                 <tbody>
                     <?php foreach ($struk['detail'] as $item): ?>
                     <tr>
-                        <td class="text-left"><?php echo $item['nama_tiket']; ?></td>
-                        <td style="text-align: center;"><?php echo $item['jumlah']; ?></td>
+                        <td class="text-left"><?php echo html_escape($item['nama_tiket']); ?></td>
+                        <td style="text-align: center;"><?php echo (int)$item['jumlah']; ?></td>
                         <td class="text-right"><?php echo number_format($item['harga_saat_transaksi'], 0, ',', '.'); ?></td>
                         <td class="text-right"><?php echo number_format($item['harga_saat_transaksi'] * $item['jumlah'], 0, ',', '.'); ?></td>
                     </tr>
@@ -132,7 +132,7 @@
             <div class="qr-code">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<?php echo urlencode($struk['tiket']['kode_tiket']); ?>" 
                      alt="QR Code">
-                <p><?php echo $struk['tiket']['kode_tiket']; ?></p>
+                <p><?php echo html_escape($struk['tiket']['kode_tiket']); ?></p>
             </div>
 
             <div class="footer">

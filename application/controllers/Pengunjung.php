@@ -6,10 +6,8 @@ class Pengunjung extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
-        $this->load->library('session');
-        if ( ! $this->session->userdata('username')) {
-            redirect('auth');
-        }
+        check_login();
+        check_role('Admin');
         $this->load->model('M_pengunjung');
     }
 

@@ -94,8 +94,8 @@
                   <?php foreach ($laporan_rekap as $rekap) : ?>
                   <tr>
                     <td><?php echo $no++; ?></td>
-                    <td><?php echo $rekap['nama_objek']; ?></td>
-                    <td><?php echo $rekap['nama_kabupaten']; ?></td>
+                    <td><?php echo html_escape($rekap['nama_objek']); ?></td>
+                    <td><?php echo html_escape($rekap['nama_kabupaten']); ?></td>
                     <td class="text-center"><?php echo number_format($rekap['total_transaksi'] ?? 0); ?></td>
                     <td class="text-center"><?php echo number_format($rekap['total_pengunjung'] ?? 0); ?> Orang</td>
                     <td class="text-end">Rp <?php echo number_format($rekap['total_pendapatan'] ?? 0, 0, ',', '.'); ?></td>
