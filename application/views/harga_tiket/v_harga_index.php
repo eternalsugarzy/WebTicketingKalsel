@@ -81,33 +81,49 @@
               <table class="table table-bordered table-striped">
                 <thead>
                   <tr>
-                    <th>No</th>
+                    <th width="5%">No</th>
                     <th>Objek Wisata</th>
                     <th>Kategori Tiket</th>
                     <th>Harga</th>
-                    <th>Aksi</th>
+                    <th width="15%">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <?php $no = 1; ?>
-                  <?php foreach ($daftar_harga as $harga) : ?>
-                  <tr>
-                    <td><?php echo $no++; ?></td>
-                    <td><?php echo $harga['nama_objek']; ?></td>
-                    <td><?php echo $harga['nama_tiket']; ?></td>
-                    <td><?php echo 'Rp ' . number_format($harga['harga'], 0, ',', '.'); ?></td>
-                    <td>
-                      <a href="<?php echo base_url('harga_tiket/edit/' . $harga['id_harga']); ?>" class="btn btn-warning btn-sm"> <i class="ti ti-edit"></i>
-                      </a>
-                      <button type="button" class="btn btn-danger btn-sm btn-hapus" 
-                              data-url="<?php echo base_url('harga_tiket/hapus/' . $harga['id_harga']); ?>"> <i class="ti ti-trash" style="font-size: 0.9rem;"></i>
-                      </button>
-                    </td>
-                  </tr>
-                  <?php endforeach; ?>
+                  <?php 
+                    // [MODIFIKASI] Penomoran agar berlanjut di halaman berikutnya
+                    $no = $start + 1; 
+                  ?>
+                  <?php if(empty($daftar_harga)) : ?>
+                    <tr>
+                        <td colspan="5" class="text-center">Data tidak ditemukan.</td>
+                    </tr>
+                  <?php else : ?>
+                      <?php foreach ($daftar_harga as $harga) : ?>
+                      <tr>
+                        <td><?php echo $no++; ?></td>
+                        <td><?php echo $harga['nama_objek']; ?></td>
+                        <td><?php echo $harga['nama_tiket']; ?></td>
+                        <td><?php echo 'Rp ' . number_format($harga['harga'], 0, ',', '.'); ?></td>
+                        <td>
+                          <a href="<?php echo base_url('harga_tiket/edit/' . $harga['id_harga']); ?>" class="btn btn-warning btn-sm"> 
+                            <i class="ti ti-edit"></i>
+                          </a>
+                          <button type="button" class="btn btn-danger btn-sm btn-hapus" 
+                                  data-url="<?php echo base_url('harga_tiket/hapus/' . $harga['id_harga']); ?>"> 
+                            <i class="ti ti-trash" style="font-size: 0.9rem;"></i>
+                          </button>
+                        </td>
+                      </tr>
+                      <?php endforeach; ?>
+                  <?php endif; ?>
                 </tbody>
               </table>
             </div>
+            
+            <div class="mt-3">
+                <?php echo $pagination; ?>
+            </div>
+
           </div>
         </div>
       </div>

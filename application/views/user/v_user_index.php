@@ -43,8 +43,8 @@
                   <?php foreach ($users as $user) : ?>
                   <tr>
                     <td><?php echo $no++; ?></td>
-                    <td><?php echo $user['nama_lengkap']; ?></td>
-                    <td><?php echo $user['username']; ?></td>
+                    <td><?php echo html_escape($user['nama_lengkap']); ?></td>
+                    <td><?php echo html_escape($user['username']); ?></td>
                     <td>
                         <?php if($user['level'] == 'Admin'): ?>
                             <span class="badge bg-light-primary"><?php echo $user['level']; ?></span>

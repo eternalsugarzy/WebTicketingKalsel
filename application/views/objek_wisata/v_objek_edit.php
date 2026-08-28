@@ -24,7 +24,7 @@
           </div>
           <div class="card-body">
             
-            <?php echo form_open('objek_wisata/proses_edit/' . $objek['id_objek']); ?>
+            <?php echo form_open_multipart('objek_wisata/proses_edit/' . $objek['id_objek']); ?>
               
               <input type="hidden" name="id_objek" value="<?php echo $objek['id_objek']; ?>">
 
@@ -52,6 +52,26 @@
               <div class="mb-3">
                 <label for="alamat" class="form-label">Alamat</label>
                 <textarea class="form-control" id="alamat" name="alamat" rows="3"><?php echo set_value('alamat', $objek['alamat']); ?></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="deskripsi" class="form-label">Deskripsi Lengkap</label>
+                <textarea class="form-control" id="deskripsi" name="deskripsi" rows="5"><?php echo set_value('deskripsi', $objek['deskripsi']); ?></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="foto" class="form-label">Foto Objek Wisata</label>
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <?php if(!empty($objek['foto'])): ?>
+                            <img src="<?php echo base_url('uploads/objek_wisata/'.$objek['foto']); ?>" class="img-thumbnail mb-2" style="max-height: 100px;">
+                        <?php endif; ?>
+                    </div>
+                    <div class="col-md-9">
+                        <input type="file" class="form-control" id="foto" name="foto">
+                        <small class="text-muted">Biarkan kosong jika tidak ingin mengganti foto.</small>
+                    </div>
+                </div>
               </div>
 
               <button type="submit" class="btn btn-primary">Simpan Perubahan</button>

@@ -83,10 +83,10 @@
                   <tr>
                     <td><?php echo $no++; ?></td>
                     <td><?php echo date('d/m/Y H:i:s', strtotime($laporan['waktu_validasi'])); ?></td>
-                    <td><?php echo $laporan['kode_tiket']; ?></td>
-                    <td><?php echo $laporan['nama_objek']; ?></td>
+                    <td><?php echo html_escape($laporan['kode_tiket']); ?></td>
+                    <td><?php echo html_escape($laporan['nama_objek'] ?? ''); ?></td>
                     <td class="text-center"><?php echo $laporan['total_pengunjung']; ?> Orang</td>
-                    <td><?php echo $laporan['nama_petugas']; ?></td>
+                    <td><?php echo html_escape($laporan['nama_petugas'] ?? ''); ?></td>
                   </tr>
                   <?php endforeach; ?>
                 </tbody>

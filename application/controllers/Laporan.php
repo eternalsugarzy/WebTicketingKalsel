@@ -6,11 +6,8 @@ class Laporan extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
-        
-        if ( ! $this->session->userdata('username')) {
-            $this->session->set_flashdata('error', 'Anda harus login terlebih dahulu!');
-            redirect('auth');
-        }
+        check_login();
+        check_role('Admin');
         $this->load->model('M_laporan');
     }
 

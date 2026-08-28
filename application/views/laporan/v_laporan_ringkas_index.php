@@ -70,7 +70,7 @@
                 
                 <?php foreach ($laporan_ringkas as $laporan): ?>
                 <tr>
-                  <td><?php echo $laporan['nama_tiket']; ?></td>
+                  <td><?php echo html_escape($laporan['nama_tiket']); ?></td>
                   <td class="text-center"><?php echo number_format($laporan['total_tiket_terjual'] ?? 0); ?></td>
                   <td class="text-end">Rp <?php echo number_format($laporan['subtotal'] ?? 0, 0, ',', '.'); ?></td>
                 </tr>

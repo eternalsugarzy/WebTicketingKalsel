@@ -6,16 +6,10 @@ class Dashboard extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
-        
-        // Cek status login
-        if ( ! $this->session->userdata('username')) {
-            $this->session->set_flashdata('error', 'Anda harus login terlebih dahulu!');
-            redirect('auth');
-        }
+        check_login();
 
-        // MEMUAT MODEL
         $this->load->model('M_dashboard');
-        $this->load->model('M_laporan'); 
+        $this->load->model('M_laporan');
     }
 
     public function index()

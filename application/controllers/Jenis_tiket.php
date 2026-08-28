@@ -6,11 +6,8 @@ class Jenis_tiket extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
-        
-        if ( ! $this->session->userdata('username')) {
-            $this->session->set_flashdata('error', 'Anda harus login terlebih dahulu!');
-            redirect('auth');
-        }
+        check_login();
+        check_role('Admin');
         $this->load->model('M_jenis_tiket');
     }
 
@@ -121,13 +118,23 @@ class Jenis_tiket extends CI_Controller {
     /**
      * [FUNGSI BARU] Proses hapus data
      */
-    public function hapus($id_tiket)
+     public function hapus($id_tiket)
     {
-        // 1. Panggil model untuk hapus data
-        $this->M_jenis_tiket->hapus_tiket($id_tiket);
+        $tiket = $this->M_jenis_tiket->get_tiket_by_id($id_tiket);
 
-        // 2. Set pesan sukses dan redirect
-        $this->session->set_flashdata('sukses', 'Kategori tiket berhasil dihapus.');
+        if (!$tiket) {
+            $this->session->set_flashdata('error', 'Data jenis tiket tidak ditemukan!');
+            redirect('jenis_tiket');
+        }
+
+        $result = $this->M_jenis_tiket->hapus_tiket($id_tiket);
+
+        if ($result) {
+            $this->session->set_flashdata('sukses', 'Kategori tiket berhasil dihapus.');
+        } else {
+            $this->session->set_flashdata('error', 'Gagal menghapus kategori tiket. Data mungkin masih digunakan.');
+        }
+
         redirect('jenis_tiket');
     }
 
